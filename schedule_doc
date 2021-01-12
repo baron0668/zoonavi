@@ -1,6 +1,8 @@
 動物園導覽App
 
 使用程式架構：MVVM
+使用kotlin coroutin
+third-party lib: glide
 
 開發階段：
 - 初略架構 DL(1/13, 5days)
@@ -15,9 +17,12 @@
 	1. 調整UI細節
 	2. 要求功能的驗證
 	3. 注意各種情況下的測試 (activity被系統刪除後、無網路的時候、從背景程式回來時、畫面旋轉)
+	4. 測試從別台電腦clone github且編譯執行成功
 - 撰寫回覆文件 DL(1/16, 1day)
 
 - 加上額外功能 (option)
 	1. 手動下拉重新整理
 	2. GPS定位功能
 	3. QRcode功能
+	4. 使用SQL存放資料
+	5. 橫向使用另一種layout
