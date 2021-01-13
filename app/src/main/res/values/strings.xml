@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">zoonavi</string>
     <string name="zoo_name">Taipei Zoo</string>
+    <string name="plants">Plants</string>
 </resources>

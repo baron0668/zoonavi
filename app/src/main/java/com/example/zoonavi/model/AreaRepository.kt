@@ -1,5 +1,7 @@
 package com.example.zoonavi.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -30,8 +32,9 @@ class AreaRepository {
     }
 }
 
+@Entity(tableName = "areas")
 data class Area(
-    val id: Int,
+    @PrimaryKey val id: Int,
     val name: String,
     val category: String,
     val info: String,
