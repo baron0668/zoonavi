@@ -25,7 +25,8 @@ class Api {
         withContext(Dispatchers.IO) {
             client.newCall(request).execute().also {
                 if (it.code == 200) {
-                    result = it.body?.string()
+                    //decode as utf8 and remove bom chars to fixing issue
+                    result = it.body?.string()?.replace("\ufeff", "")
                     Log.d("test",result)
                 }
             }

@@ -38,6 +38,7 @@ class AreaFragment: Fragment() {
             backBtn.setOnClickListener {
                 parentFragmentManager.popBackStack()
             }
+
             listView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
             listView.adapter = Adapter()
         }
@@ -80,6 +81,7 @@ class AreaFragment: Fragment() {
                         setPadding(context.resources.getDimension(R.dimen.content_padding).toInt(), 0, 0, 0)
                         gravity = Gravity.CENTER or Gravity.START
                         text = context.getString(R.string.plants)
+                        textSize = 18f
                     }) {
                         //empty body
                     }
@@ -114,8 +116,8 @@ class AreaFragment: Fragment() {
         private val viewBinding = PlantsListItemLayoutBinding.bind(itemView)
         fun setData(plant: Plant) {
             Glide.with(itemView.context).load(plant.mainPicUrl).into(viewBinding.image)
-            viewBinding.title.text = plant.nameInEng
-            viewBinding.brief.text = plant.briefInfo
+            viewBinding.title.text = plant.name
+            viewBinding.brief.text = plant.alsoKnown
             itemView.setOnClickListener {
                 callback.onItemClick(plant)
             }

@@ -23,6 +23,7 @@
         app:layout_constraintTop_toTopOf="@id/image"
         android:text="@string/plants"
         android:paddingStart="16dp"
+        android:textSize="16dp"
         android:gravity="center|start"/>
     <TextView
         android:id="@+id/brief"
@@ -32,6 +33,8 @@
         app:layout_constraintRight_toLeftOf="@+id/arrow_icon"
         app:layout_constraintTop_toBottomOf="@+id/title"
         app:layout_constraintBottom_toBottomOf="@+id/image"
+        android:maxLines="2"
+        android:ellipsize="end"
         android:paddingStart="16dp" />
 
     <ImageView

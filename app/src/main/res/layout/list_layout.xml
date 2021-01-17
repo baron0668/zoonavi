@@ -26,6 +26,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:textSize="18sp"/>
+
     </FrameLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -35,5 +36,15 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title_bar"
         app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title_bar"
+        style="@android:style/Widget.ProgressBar.Inverse"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
