@@ -2,4 +2,9 @@
     <string name="app_name">zoonavi</string>
     <string name="zoo_name">Taipei Zoo</string>
     <string name="plants">Plants</string>
+    <string name="also_know">Also Known</string>
+    <string name="brief">Brief</string>
+    <string name="feature">Feature</string>
+    <string name="application">Application</string>
+    <string name="updated">Updated</string>
 </resources>

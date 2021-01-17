@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">zoonavi</string>
+    <string name="zoo_name">台北市立動物園</string>
+    <string name="plants">植物</string>
+    <string name="also_know">別稱</string>
+    <string name="brief">簡介</string>
+    <string name="feature">辨認方式</string>
+    <string name="application">功能性</string>
+    <string name="updated">最後更新</string>
+</resources>

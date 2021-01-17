@@ -51,6 +51,8 @@ class AreaListFragment: Fragment() {
 
     private val itemCallback: ItemCallback = object: ItemCallback {
         override fun onItemClick(areaName: String) {
+            val viewModel: ZooViewModel by activityViewModels()
+            viewModel.resetPlantStatus()
             parentFragmentManager.commit {
                 val bundle = bundleOf("name" to areaName)
                 setReorderingAllowed(true)

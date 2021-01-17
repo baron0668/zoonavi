@@ -3,27 +3,34 @@ package com.example.zoonavi.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.zoonavi.model.*
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class ZooViewModel(application: Application): AndroidViewModel(application) {
     val areas: MutableLiveData<List<Area>> = MutableLiveData()
-    val plants: MutableLiveData<List<Plant>> = MutableLiveData()
+    val plantsInArea: MutableLiveData<List<Plant>> = MutableLiveData()
+    var plantInInfo: Plant? = null
     val areaRepositoryStatus: MutableLiveData<Status> = MutableLiveData(Status.Init)
     val plantsRepositoryStatus: MutableLiveData<Status> = MutableLiveData(Status.Init)
+    val isPlantDbReady: MutableLiveData<Boolean> = MutableLiveData(false)
     private val areaRepository = AreaRepository()
     private val plantRepository = PlantRepository(getApplication<Application>().applicationContext)
+    private var plantUpdateTask: Job? = null
+    private var plantSearchTask: Job? = null
 
     fun loadAreas() {
         if (areaRepositoryStatus.value != Status.Loading) {
             viewModelScope.launch {
                 areaRepositoryStatus.postValue(Status.Loading)
                 areaRepository.getAreaList().also {
-                    areaRepositoryStatus.postValue(Status.Done)
-                    areas.postValue(it)
+                    if (it == null) {
+                        areaRepositoryStatus.postValue(Status.Error)
+                    } else {
+                        areaRepositoryStatus.postValue(Status.Done)
+                        areas.postValue(it)
+                    }
                 }
             }
         }
@@ -42,14 +49,30 @@ class ZooViewModel(application: Application): AndroidViewModel(application) {
 
     fun loadPlants(areaName: String) {
         if (plantsRepositoryStatus.value != Status.Loading) {
-            viewModelScope.launch {
-                plantsRepositoryStatus.postValue(Status.Loading)
-                plantRepository.findPlants("%$areaName%").also {
-                    plantsRepositoryStatus.postValue(Status.Done)
-                    plants.postValue(it)
+            plantsRepositoryStatus.postValue(Status.Loading)
+            if (isPlantDbReady.value == false && plantUpdateTask?.isActive != true) {
+                plantUpdateTask = viewModelScope.launch {
+                    isPlantDbReady.postValue(plantRepository.updatePlantsDb())
                 }
             }
+            if (isPlantDbReady.value == true) {
+                plantSearchTask = viewModelScope.launch {
+                    plantRepository.findPlants("%$areaName%").also {
+                        plantsRepositoryStatus.postValue(Status.Done)
+                        plantsInArea.postValue(it)
+                    }
+                }
+            } else {
+                plantsRepositoryStatus.postValue(Status.Error)
+            }
         }
+    }
+
+    fun resetPlantStatus() {
+        plantSearchTask?.cancel()
+        plantSearchTask = null
+        plantsInArea.postValue(ArrayList())
+        plantsRepositoryStatus.postValue(Status.Init)
     }
 }
 
