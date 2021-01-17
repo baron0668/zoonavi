@@ -25,7 +25,7 @@ class PlantFragment: Fragment() {
         val viewModel by activityViewModels<ZooViewModel>()
         plant = viewModel.plantInInfo!!
         viewBinding = PlantInfoLayoutBinding.inflate(inflater, container, false).apply {
-            titleText.text = plant.nameInEng
+            titleText.text = plant.name
             backBtn.setOnClickListener {
                 parentFragmentManager.popBackStack()
             }

@@ -18,6 +18,7 @@ import com.example.zoonavi.databinding.ListLayoutBinding
 import com.example.zoonavi.databinding.PlantsListItemLayoutBinding
 import com.example.zoonavi.model.Area
 import com.example.zoonavi.model.Plant
+import com.example.zoonavi.viewmodel.Status
 import com.example.zoonavi.viewmodel.ZooViewModel
 
 class AreaFragment: Fragment() {
@@ -43,7 +44,6 @@ class AreaFragment: Fragment() {
             listView.adapter = Adapter()
         }
 
-
         viewModel.plantsInArea.observe(viewLifecycleOwner) {
             plantList.clear()
             plantList.addAll(it)
@@ -53,6 +53,9 @@ class AreaFragment: Fragment() {
             if (it == true) {
                 viewModel.loadPlants(areaName)
             }
+        }
+        viewModel.plantsRepositoryStatus.observe(viewLifecycleOwner) {
+            viewBinding.progressBar.visibility = if (it == Status.Loading) View.VISIBLE else View.GONE
         }
         viewModel.loadPlants(areaName)
         return viewBinding.root

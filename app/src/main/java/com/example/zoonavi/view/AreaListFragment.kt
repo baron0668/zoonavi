@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide
 import com.example.zoonavi.R
 import com.example.zoonavi.databinding.ListLayoutBinding
 import com.example.zoonavi.model.Area
+import com.example.zoonavi.viewmodel.Status
 import com.example.zoonavi.viewmodel.ZooViewModel
 
 class AreaListFragment: Fragment() {
@@ -35,11 +36,14 @@ class AreaListFragment: Fragment() {
         viewBinding.listView.adapter = Adapter()
 
         val viewModel: ZooViewModel by activityViewModels()
-        viewModel.areas.observe(viewLifecycleOwner, Observer<List<Area>>(){
+        viewModel.areas.observe(viewLifecycleOwner) {
             areaList.clear()
             areaList.addAll(it)
             (viewBinding.listView.adapter as Adapter).notifyDataSetChanged()
-        })
+        }
+        viewModel.areaRepositoryStatus.observe(viewLifecycleOwner) {
+            viewBinding.progressBar.visibility = if (it == Status.Loading) View.VISIBLE else View.GONE
+        }
         viewModel.loadAreas()
         return viewBinding.root
     }
