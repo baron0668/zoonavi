@@ -12,7 +12,6 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -21,10 +20,12 @@ import com.example.zoonavi.databinding.ListLayoutBinding
 import com.example.zoonavi.model.Area
 import com.example.zoonavi.viewmodel.Status
 import com.example.zoonavi.viewmodel.ZooViewModel
+import kotlinx.coroutines.Job
 
 class AreaListFragment: Fragment() {
     private lateinit var viewBinding: ListLayoutBinding
     private val areaList: MutableList<Area> = ArrayList()
+    private var job: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,11 +44,24 @@ class AreaListFragment: Fragment() {
             areaList.addAll(it)
             (viewBinding.listView.adapter as Adapter).notifyDataSetChanged()
         }
-        viewModel.areaRepositoryStatus.observe(viewLifecycleOwner) {
+        viewModel.areaListFragmentLoadingStatus.observe(viewLifecycleOwner) {
             viewBinding.progressBar.visibility = if (it == Status.Loading) View.VISIBLE else View.GONE
         }
-        viewModel.loadAreas()
+
         return viewBinding.root
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val viewModel: ZooViewModel by activityViewModels()
+        job = viewModel.setAreaListFragmentInfo()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (job?.isActive == true) {
+            job?.cancel()
+        }
     }
 
     override fun onResume() {

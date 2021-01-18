@@ -1,6 +1,5 @@
 package com.example.zoonavi.model
 
-import android.util.Log
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.zoonavi.viewmodel.Callback
@@ -18,10 +17,10 @@ class AreaRepository(val callback: Callback) {
         return withContext(Dispatchers.IO) {
             if (dataList == null) {
                 val apiResult = api.sendRequest(Api.Source.Area)
-                if (apiResult != null) {
-                    dataList = ArrayList(parseJson(apiResult))
+                dataList = if (apiResult != null) {
+                    ArrayList(parseJson(apiResult))
                 } else {
-                    dataList = ArrayList(readFromOfflineData())
+                    ArrayList(readFromOfflineData())
                 }
             }
             dataList
@@ -78,7 +77,6 @@ class AreaRepository(val callback: Callback) {
                         }
                     }
                 }
-        Log.d("test", resultList.toString())
         return resultList
     }
 }

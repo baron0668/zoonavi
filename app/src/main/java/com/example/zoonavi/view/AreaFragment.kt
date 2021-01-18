@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
@@ -22,22 +23,24 @@ import com.example.zoonavi.model.Area
 import com.example.zoonavi.model.Plant
 import com.example.zoonavi.viewmodel.Status
 import com.example.zoonavi.viewmodel.ZooViewModel
+import kotlinx.coroutines.Job
 
 class AreaFragment: Fragment() {
-    private lateinit var area: Area
+    private lateinit var areaName: String
+    private var area: Area? = null
     private lateinit var viewBinding: ListLayoutBinding
     private val plantList: MutableList<Plant> = ArrayList()
+    private var job: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val areaName = arguments?.getString("name") ?: ""
+        areaName = arguments?.getString("name") ?: ""
         val viewModel: ZooViewModel by activityViewModels()
-        area = viewModel.getAreaByName(areaName)!!
         viewBinding = ListLayoutBinding.inflate(inflater, container, false).apply {
-            titleText.text = area.name
+            titleText.text = areaName
             backBtn.setOnClickListener {
                 parentFragmentManager.popBackStack()
             }
@@ -46,30 +49,42 @@ class AreaFragment: Fragment() {
             listView.adapter = Adapter()
         }
 
+        viewModel.areaForFragment.observe(viewLifecycleOwner) {
+            if (it != null) {
+                area = it
+                viewBinding.listView.adapter?.notifyDataSetChanged()
+            }
+        }
         viewModel.plantsInArea.observe(viewLifecycleOwner) {
             plantList.clear()
             plantList.addAll(it)
             viewBinding.listView.adapter?.notifyDataSetChanged()
         }
-        viewModel.isPlantDbReady.observe(viewLifecycleOwner) {
-            if (it == true) {
-                viewModel.loadPlants(areaName)
-            }
-        }
-        viewModel.plantsRepositoryStatus.observe(viewLifecycleOwner) {
+        viewModel.areaFragmentLoadingStatus.observe(viewLifecycleOwner) {
             viewBinding.progressBar.visibility = if (it == Status.Loading) View.VISIBLE else View.GONE
         }
-        viewModel.loadPlants(areaName)
         return viewBinding.root
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val viewModel: ZooViewModel by activityViewModels()
+        job = viewModel.setAreaFragmentInfo(areaName)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (job?.isActive == true) {
+            job?.cancel()
+        }
     }
 
     private val itemCallback = object: ItemCallback {
         override fun onItemClick(plant: Plant) {
-            val viewModel by activityViewModels<ZooViewModel>()
-            viewModel.plantInInfo = plant
+            val bundle = bundleOf("name" to plant.nameInEng)
             parentFragmentManager.commit {
                 setReorderingAllowed(true)
-                replace(R.id.container, PlantFragment())
+                replace(R.id.container, PlantFragment::class.java, bundle)
                 addToBackStack(null)
             }
         }
@@ -111,9 +126,11 @@ class AreaFragment: Fragment() {
 
     class AreaViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         private val viewBinding = AreaInfoItemLayoutBinding.bind(itemView)
-        fun setData(area: Area) {
-            Glide.with(itemView.context).load(area.picUrl).into(viewBinding.image)
-            viewBinding.info.text = area.info
+        fun setData(area: Area?) {
+            if (area != null) {
+                Glide.with(itemView.context).load(area.picUrl).into(viewBinding.image)
+                viewBinding.info.text = area.info
+            }
         }
     }
 

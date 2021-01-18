@@ -23,12 +23,17 @@ class Api {
             })
             .build()
         withContext(Dispatchers.IO) {
-            client.newCall(request).execute().also {
-                if (it.code == 200) {
-                    //decode as utf8 and remove bom chars to fixing issue
-                    result = it.body?.string()?.replace("\ufeff", "")
-                    Log.d("test",result)
+            try {
+                client.newCall(request).execute().also {
+                    if (it.code == 200) {
+                        //decode as utf8 and remove bom chars to fixing issue
+                        result = it.body?.string()?.replace("\ufeff", "")
+                        Log.d("test",result)
+                    }
                 }
+            } catch (exception: Exception) {
+                //empty
+                Log.d("test", exception.toString())
             }
         }
         return result

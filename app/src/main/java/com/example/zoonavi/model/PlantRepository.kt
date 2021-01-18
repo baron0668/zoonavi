@@ -11,33 +11,41 @@ import org.json.JSONException
 import org.json.JSONObject
 
 class PlantRepository(context: Context, val callback: Callback) {
+    private var isDbReady = false
     private val plantDao: PlantDao = AppDatabase.getInstance(context).plantDao()
     private val api = Api()
 
-    suspend fun updatePlantsDb(): Boolean {
+    suspend fun updatePlantsDb() {
         return withContext(Dispatchers.IO) {
-            val apiResult = api.sendRequest(Api.Source.Plant)
-            if (apiResult != null) {
-                plantDao.delete()
-                parseJson(apiResult).forEach {
-                    plantDao.insert(it)
+            if (!isDbReady) {
+                val apiResult = api.sendRequest(Api.Source.Plant)
+                if (apiResult != null) {
+                    plantDao.delete()
+                    parseJson(apiResult).forEach {
+                        plantDao.insert(it)
+                    }
+                } else {
+                    plantDao.delete()
+                    readOfflineData().forEach {
+                        plantDao.insert(it)
+                    }
                 }
-                true
-            } else {
-                plantDao.delete()
-                readOfflineData().forEach {
-                    plantDao.insert(it)
-                }
-                true
+                isDbReady = true
             }
         }
     }
 
-    suspend fun findPlants(areaName: String): List<Plant> {
+    suspend fun findPlantsByArea(areaName: String): List<Plant> {
         return withContext(Dispatchers.IO) {
             ArrayList<Plant>().also {
                 it.addAll(plantDao.getPlantsByArea(areaName))
             }
+        }
+    }
+
+    suspend fun findPlantByName(plantNameInEn: String): Plant {
+        return withContext(Dispatchers.IO) {
+            plantDao.getPlantByNameInEn(plantNameInEn)
         }
     }
 
@@ -109,7 +117,6 @@ class PlantRepository(context: Context, val callback: Callback) {
                     }
                 }
             }
-        Log.d("test", resultList.toString())
         return resultList
     }
 
@@ -137,6 +144,9 @@ interface PlantDao {
 
     @Query("SELECT * FROM plants WHERE location LIKE :areaName ORDER BY id")
     suspend fun getPlantsByArea(areaName: String): Array<Plant>
+
+    @Query("SELECT * FROM plants WHERE nameInEng LIKE :nameEn LIMIT 1")
+    suspend fun getPlantByNameInEn(nameEn: String): Plant
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(plant: Plant)

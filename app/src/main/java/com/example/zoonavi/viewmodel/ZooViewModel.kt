@@ -4,7 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.example.zoonavi.model.*
+import com.example.zoonavi.model.Area
+import com.example.zoonavi.model.AreaRepository
+import com.example.zoonavi.model.Plant
+import com.example.zoonavi.model.PlantRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.InputStreamReader
@@ -13,10 +16,11 @@ import java.io.Reader
 class ZooViewModel(application: Application): AndroidViewModel(application) {
     val areas: MutableLiveData<List<Area>> = MutableLiveData()
     val plantsInArea: MutableLiveData<List<Plant>> = MutableLiveData()
-    var plantInInfo: Plant? = null
-    val areaRepositoryStatus: MutableLiveData<Status> = MutableLiveData(Status.Init)
-    val plantsRepositoryStatus: MutableLiveData<Status> = MutableLiveData(Status.Init)
-    val isPlantDbReady: MutableLiveData<Boolean> = MutableLiveData(false)
+    val areaForFragment: MutableLiveData<Area> = MutableLiveData()
+    val plantForFragment: MutableLiveData<Plant> = MutableLiveData()
+    val areaListFragmentLoadingStatus: MutableLiveData<Status> = MutableLiveData(Status.Init)
+    val areaFragmentLoadingStatus: MutableLiveData<Status> = MutableLiveData(Status.Init)
+    val plantFragmentLoadingStatus: MutableLiveData<Status> = MutableLiveData(Status.Init)
     private val repositoryCallback = object: Callback {
         override fun getAssetReader(fileName: String): Reader {
             return InputStreamReader(getApplication<Application>().applicationContext.resources.assets.open(fileName))
@@ -24,62 +28,58 @@ class ZooViewModel(application: Application): AndroidViewModel(application) {
     }
     private val areaRepository = AreaRepository(repositoryCallback)
     private val plantRepository = PlantRepository(getApplication<Application>().applicationContext, repositoryCallback)
-    private var plantUpdateTask: Job? = null
-    private var plantSearchTask: Job? = null
 
-    fun loadAreas() {
-        if (areaRepositoryStatus.value != Status.Loading) {
-            viewModelScope.launch {
-                areaRepositoryStatus.postValue(Status.Loading)
-                areaRepository.getAreaList().also {
-                    if (it == null) {
-                        areaRepositoryStatus.postValue(Status.Error)
-                    } else {
-                        areaRepositoryStatus.postValue(Status.Done)
-                        areas.postValue(it)
-                    }
-                }
+    fun setAreaListFragmentInfo(): Job {
+        return viewModelScope.launch {
+            if (areaListFragmentLoadingStatus.value != Status.Loading) {
+                areaListFragmentLoadingStatus.postValue(Status.Loading)
+                loadAreas()
+                areaListFragmentLoadingStatus.postValue(Status.Done)
             }
         }
     }
 
-    fun getAreaByName(name: String): Area? {
-        var result: Area? = null
-        areas.value?.forEach {
-            if (it.name == name) {
-                result = it
-                return@forEach
-            }
-        }
-        return result
-    }
-
-    fun loadPlants(areaName: String) {
-        if (plantsRepositoryStatus.value != Status.Loading) {
-            plantsRepositoryStatus.postValue(Status.Loading)
-            if (isPlantDbReady.value == false && plantUpdateTask?.isActive != true) {
-                plantUpdateTask = viewModelScope.launch {
-                    isPlantDbReady.postValue(plantRepository.updatePlantsDb())
-                }
-            }
-            if (isPlantDbReady.value == true) {
-                plantSearchTask = viewModelScope.launch {
-                    plantRepository.findPlants("%$areaName%").also {
-                        plantsRepositoryStatus.postValue(Status.Done)
-                        plantsInArea.postValue(it)
+    fun setAreaFragmentInfo(areaName: String): Job {
+        return viewModelScope.launch {
+            if (areaFragmentLoadingStatus.value != Status.Loading) {
+                areaFragmentLoadingStatus.postValue(Status.Loading)
+                loadAreas()
+                //find area
+                areas.value?.forEach {
+                    if (it.name == areaName) {
+                        areaForFragment.postValue(it)
                     }
                 }
-            } else {
-                plantsRepositoryStatus.postValue(Status.Error)
+                plantRepository.updatePlantsDb()
+                plantRepository.findPlantsByArea("%$areaName%").also {
+                    plantsInArea.postValue(it)
+                }
+                areaFragmentLoadingStatus.postValue(Status.Done)
             }
+        }
+    }
+
+    fun setPlantFragmentInfo(plantNameInEn: String): Job {
+        return viewModelScope.launch {
+            if (plantFragmentLoadingStatus.value != Status.Loading) {
+                plantFragmentLoadingStatus.postValue(Status.Loading)
+                plantRepository.updatePlantsDb()
+                plantForFragment.postValue(plantRepository.findPlantByName(plantNameInEn))
+                plantFragmentLoadingStatus.postValue(Status.Done)
+            }
+        }
+    }
+
+    private suspend fun loadAreas() {
+        areaRepository.getAreaList().also {
+            areas.postValue(it)
         }
     }
 
     fun resetPlantStatus() {
-        plantSearchTask?.cancel()
-        plantSearchTask = null
         plantsInArea.postValue(ArrayList())
-        plantsRepositoryStatus.postValue(Status.Init)
+        plantForFragment.postValue(null)
+        plantFragmentLoadingStatus.postValue(Status.Init)
     }
 }
 
@@ -87,4 +87,4 @@ interface Callback {
     fun getAssetReader(fileName: String): Reader
 }
 
-enum class Status {Init, Loading, Done, Error}
+enum class Status {Init, Loading, Done}
