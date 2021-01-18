@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.zoonavi.model.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.io.InputStreamReader
+import java.io.Reader
 
 class ZooViewModel(application: Application): AndroidViewModel(application) {
     val areas: MutableLiveData<List<Area>> = MutableLiveData()
@@ -15,8 +17,13 @@ class ZooViewModel(application: Application): AndroidViewModel(application) {
     val areaRepositoryStatus: MutableLiveData<Status> = MutableLiveData(Status.Init)
     val plantsRepositoryStatus: MutableLiveData<Status> = MutableLiveData(Status.Init)
     val isPlantDbReady: MutableLiveData<Boolean> = MutableLiveData(false)
-    private val areaRepository = AreaRepository()
-    private val plantRepository = PlantRepository(getApplication<Application>().applicationContext)
+    private val repositoryCallback = object: Callback {
+        override fun getAssetReader(fileName: String): Reader {
+            return InputStreamReader(getApplication<Application>().applicationContext.resources.assets.open(fileName))
+        }
+    }
+    private val areaRepository = AreaRepository(repositoryCallback)
+    private val plantRepository = PlantRepository(getApplication<Application>().applicationContext, repositoryCallback)
     private var plantUpdateTask: Job? = null
     private var plantSearchTask: Job? = null
 
@@ -74,6 +81,10 @@ class ZooViewModel(application: Application): AndroidViewModel(application) {
         plantsInArea.postValue(ArrayList())
         plantsRepositoryStatus.postValue(Status.Init)
     }
+}
+
+interface Callback {
+    fun getAssetReader(fileName: String): Reader
 }
 
 enum class Status {Init, Loading, Done, Error}

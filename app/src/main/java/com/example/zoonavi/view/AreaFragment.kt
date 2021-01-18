@@ -1,5 +1,7 @@
 package com.example.zoonavi.view
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -118,7 +120,7 @@ class AreaFragment: Fragment() {
     class PlantsViewHolder(itemView: View, val callback: ItemCallback): RecyclerView.ViewHolder(itemView) {
         private val viewBinding = PlantsListItemLayoutBinding.bind(itemView)
         fun setData(plant: Plant) {
-            Glide.with(itemView.context).load(plant.mainPicUrl).into(viewBinding.image)
+            Glide.with(itemView.context).load(plant.mainPicUrl).placeholder(ColorDrawable(Color.GRAY)).into(viewBinding.image)
             viewBinding.title.text = plant.name
             viewBinding.brief.text = plant.alsoKnown
             itemView.setOnClickListener {

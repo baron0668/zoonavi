@@ -1,5 +1,7 @@
 package com.example.zoonavi.view
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -91,7 +93,7 @@ class AreaListFragment: Fragment() {
         }
 
         fun setData(area: Area) {
-            Glide.with(itemView.context).load(area.picUrl).into(imageView)
+            Glide.with(itemView.context).load(area.picUrl).placeholder(ColorDrawable(Color.GRAY)).into(imageView)
             areaName = area.name
             titleView.text = area.name
         }

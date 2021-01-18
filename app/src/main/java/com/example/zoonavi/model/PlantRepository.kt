@@ -3,12 +3,14 @@ package com.example.zoonavi.model
 import android.content.Context
 import android.util.Log
 import androidx.room.*
+import com.example.zoonavi.viewmodel.Callback
+import com.opencsv.CSVReader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONException
 import org.json.JSONObject
 
-class PlantRepository(context: Context) {
+class PlantRepository(context: Context, val callback: Callback) {
     private val plantDao: PlantDao = AppDatabase.getInstance(context).plantDao()
     private val api = Api()
 
@@ -17,7 +19,10 @@ class PlantRepository(context: Context) {
             val apiResult = api.sendRequest(Api.Source.Plant)
             if (apiResult != null) {
                 plantDao.delete()
-                parseJson(apiResult).forEach {
+//                parseJson(apiResult).forEach {
+//                    plantDao.insert(it)
+//                }
+                readOfflineData().forEach {
                     plantDao.insert(it)
                 }
                 true
@@ -33,6 +38,44 @@ class PlantRepository(context: Context) {
                 it.addAll(plantDao.getPlantsByArea(areaName))
             }
         }
+    }
+
+    private fun readOfflineData(): List<Plant> {
+        val resultList: MutableList<Plant> = ArrayList()
+        val csvReader = CSVReader(callback.getAssetReader("plants.csv"))
+        val fieldNameArray = csvReader.readNext()
+        val fieldIndexArray = Array<Int>(10) {
+            fieldNameArray.indexOf(when(it) {
+                0 -> "F_Name_Ch"
+                1 -> "F_Name_En"
+                2 -> "F_AlsoKnown"
+                3 -> "F_Location"
+                4 -> "F_Brief"
+                5 -> "F_Feature"
+                6 -> "F_Function＆Application"
+                7 -> "F_Update"
+                8 -> "F_Pic01_URL"
+                else -> "F_Pic01_ALT"
+            })
+        }
+        val index = 0
+        csvReader.readAll().forEach {
+            resultList.add(Plant(
+                index,
+                it[fieldIndexArray[0]],
+                it[fieldIndexArray[1]],
+                it[fieldIndexArray[2]],
+                it[fieldIndexArray[3]],
+                it[fieldIndexArray[4]],
+                it[fieldIndexArray[5]],
+                it[fieldIndexArray[6]],
+                it[fieldIndexArray[7]],
+                it[fieldIndexArray[8]],
+                it[fieldIndexArray[9]]
+            ))
+        }
+        csvReader.close()
+        return resultList
     }
 
     private fun parseJson(jsonString: String): List<Plant> {
