@@ -17,10 +17,12 @@ class AreaRepository(val callback: Callback) {
     suspend fun getAreaList(): List<Area>? {
         return withContext(Dispatchers.IO) {
             if (dataList == null) {
-//                api.sendRequest(Api.Source.Area)?.let {
-//                    dataList = ArrayList(parseJson(it))
-//                }
-                dataList = ArrayList(readFromOfflineData())
+                val apiResult = api.sendRequest(Api.Source.Area)
+                if (apiResult != null) {
+                    dataList = ArrayList(parseJson(apiResult))
+                } else {
+                    dataList = ArrayList(readFromOfflineData())
+                }
             }
             dataList
         }

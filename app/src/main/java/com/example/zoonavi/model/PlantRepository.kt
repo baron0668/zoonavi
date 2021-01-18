@@ -19,15 +19,16 @@ class PlantRepository(context: Context, val callback: Callback) {
             val apiResult = api.sendRequest(Api.Source.Plant)
             if (apiResult != null) {
                 plantDao.delete()
-//                parseJson(apiResult).forEach {
-//                    plantDao.insert(it)
-//                }
-                readOfflineData().forEach {
+                parseJson(apiResult).forEach {
                     plantDao.insert(it)
                 }
                 true
             } else {
-                false
+                plantDao.delete()
+                readOfflineData().forEach {
+                    plantDao.insert(it)
+                }
+                true
             }
         }
     }
@@ -52,13 +53,13 @@ class PlantRepository(context: Context, val callback: Callback) {
                 3 -> "F_Location"
                 4 -> "F_Brief"
                 5 -> "F_Feature"
-                6 -> "F_Function＆Application"
+                6 -> "F_Function&Application"
                 7 -> "F_Update"
                 8 -> "F_Pic01_URL"
                 else -> "F_Pic01_ALT"
             })
         }
-        val index = 0
+        var index = 0
         csvReader.readAll().forEach {
             resultList.add(Plant(
                 index,
@@ -73,6 +74,7 @@ class PlantRepository(context: Context, val callback: Callback) {
                 it[fieldIndexArray[8]],
                 it[fieldIndexArray[9]]
             ))
+            index++
         }
         csvReader.close()
         return resultList
