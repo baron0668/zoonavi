@@ -84,6 +84,11 @@ class AreaFragment: Fragment() {
             val bundle = bundleOf("name" to plant.nameInEng)
             parentFragmentManager.commit {
                 setReorderingAllowed(true)
+                setCustomAnimations(
+                    R.anim.slide_in,
+                    R.anim.fade_out,
+                    R.anim.fade_in,
+                    R.anim.slide_out)
                 replace(R.id.container, PlantFragment::class.java, bundle)
                 addToBackStack(null)
             }

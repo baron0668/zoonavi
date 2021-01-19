@@ -76,6 +76,11 @@ class AreaListFragment: Fragment() {
             parentFragmentManager.commit {
                 val bundle = bundleOf("name" to areaName)
                 setReorderingAllowed(true)
+                setCustomAnimations(
+                    R.anim.slide_in,
+                    R.anim.fade_out,
+                    R.anim.fade_in,
+                    R.anim.slide_out)
                 replace(R.id.container, AreaFragment::class.java, bundle)
                 addToBackStack(null)
             }
