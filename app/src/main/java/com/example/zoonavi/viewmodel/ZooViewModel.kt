@@ -1,6 +1,7 @@
 package com.example.zoonavi.viewmodel
 
 import android.app.Application
+import android.location.Location
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -67,6 +68,21 @@ class ZooViewModel(application: Application): AndroidViewModel(application) {
                 plantForFragment.postValue(plantRepository.findPlantByName(plantNameInEn))
                 plantFragmentLoadingStatus.postValue(Status.Done)
             }
+        }
+    }
+
+    fun setLocationGeoInfo(userLocation: Location) {
+        if (areas.value?.isNotEmpty() == true) {
+            val dataList = ArrayList<Area>(areas.value!!.size)
+            val areaLocation = Location("zoo")
+            //compute distance by user's location
+            areas.value?.forEach {
+                areaLocation.latitude = it.geo[0]
+                areaLocation.longitude = it.geo[1]
+                it.distance = areaLocation.distanceTo(userLocation).toInt()
+                dataList.add(it)
+            }
+            areas.postValue(dataList)
         }
     }
 

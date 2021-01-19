@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONException
 import org.json.JSONObject
+import java.util.regex.Pattern
 
 class AreaRepository(val callback: Callback) {
     private val api: Api = Api()
@@ -31,14 +32,15 @@ class AreaRepository(val callback: Callback) {
         val resultList: MutableList<Area> = ArrayList()
         val csvReader = CSVReader(callback.getAssetReader("areas.csv"))
         val fieldNameArray = csvReader.readNext()
-        val fieldIndexArray = Array<Int>(6) {
+        val fieldIndexArray = Array<Int>(7) {
             fieldNameArray.indexOf(when(it) {
                 0 -> "E_no"
                 1 -> "E_Name"
                 2 -> "E_Category"
                 3 -> "E_Info"
                 4 -> "E_Pic_URL"
-                else -> "E_URL"
+                5 -> "E_URL"
+                else -> "E_Geo"
             })
         }
         csvReader.readAll().forEach {
@@ -48,7 +50,8 @@ class AreaRepository(val callback: Callback) {
                 it[fieldIndexArray[2]],
                 it[fieldIndexArray[3]],
                 it[fieldIndexArray[4]],
-                it[fieldIndexArray[5]]
+                it[fieldIndexArray[5]],
+                parseGeoInfo(it[fieldIndexArray[6]])
             ))
         }
         csvReader.close()
@@ -69,7 +72,8 @@ class AreaRepository(val callback: Callback) {
                                         it.getString("E_Category"),
                                         it.getString("E_Info"),
                                         it.getString("E_Pic_URL"),
-                                        it.getString("E_URL")
+                                        it.getString("E_URL"),
+                                        parseGeoInfo(it.getString("E_Geo"))
                                 ))
                             } catch (excep: JSONException) {
 
@@ -78,6 +82,16 @@ class AreaRepository(val callback: Callback) {
                     }
                 }
         return resultList
+    }
+
+    private fun parseGeoInfo(infoString: String): DoubleArray  {
+        val result = DoubleArray(2)
+        val matcher = Pattern.compile("MULTIPOINT \\(\\(([0-9]+.[0-9]+) ([0-9]+.[0-9]+)\\)\\)").matcher(infoString)
+        if (matcher.find()) {
+            result[1] = matcher.group(1)?.toDouble() ?: 0.0
+            result[0] = matcher.group(2)?.toDouble() ?: 0.0
+        }
+        return result
     }
 }
 
@@ -88,4 +102,6 @@ data class Area(
     val category: String,
     val info: String,
     val picUrl: String,
-    val url: String)
+    val url: String,
+    val geo: DoubleArray,
+    var distance: Int = -1)

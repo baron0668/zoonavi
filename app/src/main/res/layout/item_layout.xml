@@ -12,6 +12,20 @@
         android:scaleType="centerCrop"/>
 
     <TextView
+        android:id="@+id/distance"
+        android:layout_width="wrap_content"
+        android:layout_height="24dp"
+        app:layout_constraintTop_toTopOf="@+id/image"
+        app:layout_constraintRight_toRightOf="@id/image"
+        android:textSize="14dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:gravity="center"
+        android:background="#55000000"
+        android:textColor="@android:color/white"
+        android:visibility="invisible"/>
+
+    <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="30dp"
